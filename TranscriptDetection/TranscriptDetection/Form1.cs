@@ -27,17 +27,8 @@ namespace TranscriptDetection
             InitializeComponent();
 
             string path = Directory.GetCurrentDirectory().ToString() + "\\data\\";
-            Parameters parameters = new Parameters();
 
-            //Defining the default parameters
-            parameters.layers_size = new int[] { 784, 100, 10 };
-            parameters.nblayers = parameters.layers_size.Length;
-            parameters.eta = 1;
-            parameters.batchsize = 10;
-            parameters.costfunction = Parameters.Costfunction.CROSSENTROPY;
-            parameters.regularization = true;
-            parameters.lambda = 3;
-            parameters.stopafternbsteps = 20;
+            NeuronNets.Init(path);
         }
 
         private void selectImage_Click(object sender, EventArgs e)
@@ -95,13 +86,26 @@ namespace TranscriptDetection
         private void button2_Click(object sender, EventArgs e)
         {
 
-            
+            NeuronNets.Training();
 
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            
+            var dialog = new OpenFileDialog();
+            if(dialog.ShowDialog() == DialogResult.OK)
+            {
+                using( var image = (new Image<Gray, byte>(dialog.FileName)).ThresholdBinaryInv(new Gray(180), new Gray(255)))
+                {
+                    CvInvoke.Resize(image, image, new Size(28, 28));
+
+                    pictureBox1.Image = image.Bitmap;
+                    pictureBox1.Refresh();
+
+                    label3.Text = NeuronNets.Active(image).ToString();
+                    label3.Refresh();
+                }
+            }
         }
 
 

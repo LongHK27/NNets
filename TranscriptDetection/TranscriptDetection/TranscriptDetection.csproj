@@ -81,12 +81,14 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="NeuralNet\CryptoRandom.cs" />
-    <Compile Include="NeuralNet\Dendrite.cs" />
-    <Compile Include="NeuralNet\Layer.cs" />
-    <Compile Include="NeuralNet\NetworkHelper.cs" />
-    <Compile Include="NeuralNet\NeuralNetwork.cs" />
-    <Compile Include="NeuralNet\Neuron.cs" />
+    <Compile Include="OCRMNISTReader\AxonLayer.cs" />
+    <Compile Include="OCRMNISTReader\Brain.cs" />
+    <Compile Include="OCRMNISTReader\Matrix.cs" />
+    <Compile Include="OCRMNISTReader\MNISTReader.cs" />
+    <Compile Include="OCRMNISTReader\NeuronLayer.cs" />
+    <Compile Include="OCRMNISTReader\NeuronNets.cs" />
+    <Compile Include="OCRMNISTReader\Parameters.cs" />
+    <Compile Include="OCRMNISTReader\Vector.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TranscriptDetector\FeatureMatching.cs" />

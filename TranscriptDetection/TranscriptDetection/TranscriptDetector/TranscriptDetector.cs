@@ -110,15 +110,15 @@ namespace TranscriptDetection
         /// <param name="source"></param>
         public static void Detect(Image<Bgr, byte> source)
         {
-            using (var source_rotate = Rotate(source))
+            using (var source_rotate = Rotate(source, true))
             {
                 Image<Bgr, byte> transcript_image;
                 List<ILine> vertical_line, horizontal_line;
-                var source_drawed = FindTranscriptLocation(source_rotate, out transcript_image, out horizontal_line, out vertical_line);
+                var source_drawed = FindTranscriptLocation(source_rotate, out transcript_image, out horizontal_line, out vertical_line, true);
 
                 DetectSubject(new Image<Gray, byte>(transcript_image.Bitmap), vertical_line);
 
-                //CvInvoke.Imshow("source_drawed", source_drawed.Resize(0.5, Inter.Linear));
+                CvInvoke.Imshow("source_drawed", source_drawed.Resize(0.5, Inter.Linear));
                 CvInvoke.Imshow("transcript_image", transcript_image);
             }
 
@@ -1114,8 +1114,8 @@ namespace TranscriptDetection
 
                             var ran = new Random();
 
-                            CvInvoke.Imwrite(@"C:\xxxx\" + ran.Next() + "-1.jpg", img_1);
-                            CvInvoke.Imwrite(@"C:\xxxx\" + ran.Next() + "-2.jpg", img_2);
+                            CvInvoke.Imwrite(@"C:\digit\" + ran.Next() + "-1.jpg", img_1);
+                            CvInvoke.Imwrite(@"C:\digit\" + ran.Next() + "-2.jpg", img_2);
                         }
                     }
                 }
