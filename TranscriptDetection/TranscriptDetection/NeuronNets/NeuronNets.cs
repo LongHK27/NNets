@@ -6,8 +6,10 @@ using System.Drawing;
 using System.Linq;
 using System.IO;
 using TranscriptDetection;
+using Emgu.CV;
+using Emgu.CV.Structure;
 
-namespace TranscriptDetection.Nets
+namespace TranscriptDetection
 {
     public static class NeuronNets
     {
@@ -15,38 +17,63 @@ namespace TranscriptDetection.Nets
         public static MNISTReader.DigitImage[] TrainingImages;
         public static MNISTReader.DigitImage[] ValidationImages;
         public static Brain brain;
+        public static Parameters param;
 
-        public static void Init(string dataDath)
+        public static void Init(string dataPath)
         {
             //Loading DATA
-            TestImages = MNISTReader.ReadTest(dataDath);
-            TrainingImages = MNISTReader.ReadTraining(dataDath);
-            ValidationImages = MNISTReader.ReadValidation(dataDath);
+            TestImages          = MNISTReader.ReadTest(dataPath);
+            TrainingImages      = MNISTReader.ReadTraining(dataPath);
+            ValidationImages    = MNISTReader.ReadValidation(dataPath);
 
-            Parameters parameters = new Parameters();
+            param = new Parameters();
 
             //Defining the default parameters
-            parameters.layers_size = new int[] { 784, 100, 10 };
-            parameters.nblayers = parameters.layers_size.Length;
-            parameters.eta = 1;
-            parameters.batchsize = 10;
-            parameters.costfunction = Parameters.Costfunction.CROSSENTROPY;
-            parameters.regularization = true;
-            parameters.lambda = 3;
-            parameters.stopafternbsteps = 20;
+            param.layers_size = new int[] { 784, 100, 10 };
+            param.nblayers = param.layers_size.Length;
+            param.eta = 1;
+            param.batchsize = 10;
+            param.costfunction = Parameters.Costfunction.CROSSENTROPY;
+            param.regularization = true;
+            param.lambda = 3;
+            param.stopafternbsteps = 20;
 
             //Creates a brain on the given parameters
-            brain = new Brain(parameters);
+            brain = new Brain(param);
+
         }
 
-        public static void Driver(Parameters p)
+        public static int Active(Image<Gray, byte> digitImage)
+        {
+            byte[][] imageData = new byte[digitImage.Width][];
+
+            for(var i = 0; i < digitImage.Width; i++)
+            {
+                imageData[i] = new byte[digitImage.Height];
+
+                for(var j = 0; j < digitImage.Height; j++)
+                {
+                    imageData[i][j] = digitImage.Data[j, i, 0];
+                }
+            }
+
+            var image = new MNISTReader.DigitImage(imageData, (byte) 0);
+            Vector doublevector = ConvertImageToVector(image);
+            brain.SetInitialActivation(doublevector);
+            brain.FeedForward();
+
+            return brain.GetResult();
+        }
+
+
+        public static void Training()
         {
             //for computation time
             DateTime starttime = DateTime.Now;
 
             //For the logs 
             List<String> log = new List<string>();
-            log.Add(p.ToString());
+            log.Add(param.ToString());
 
             double bestvalidationresult = 0;
             int step = 1;
@@ -62,15 +89,15 @@ namespace TranscriptDetection.Nets
             int stopcounter = 0;
 
             //Driver
-            while (stopcounter < p.stopafternbsteps)
+            while (stopcounter < param.stopafternbsteps)
             {
                 //LEARNING
-                IterateStochasticGradient(1, p.batchsize, brain);
+                IterateStochasticGradient(1, param.batchsize, brain);
 
                 //TESTING
                 double validationresult = GetValidationResult(brain);
-                Console.WriteLine("Epoch nb : " + step + "  eta =  " + p.eta.ToString() + "  |    Validation error : " + (1 - validationresult).ToString());
-                log.Add(step.ToString() + " " + p.eta.ToString() + " " + (1 - validationresult).ToString());
+                Console.WriteLine("Epoch nb : " + step + "  \teta =  " + param.eta.ToString() + "  |    Validation error : " + (1 - validationresult).ToString());
+                log.Add(step.ToString() + " " + param.eta.ToString() + " " + (1 - validationresult).ToString());
 
                 //Continues, reduces the learning rate or stops, depending on the result
                 if (validationresult > bestvalidationresult)
@@ -87,12 +114,13 @@ namespace TranscriptDetection.Nets
                     }
                     else
                     {
-                        p.eta /= 2;
+                        param.eta /= 2;
                         tolerance = 2;
                     }
                     stopcounter += 1;
                 }
                 step += 1;
+                
             }
             log.Add(" ");
             //END
@@ -207,8 +235,10 @@ namespace TranscriptDetection.Nets
             //Shuffle it
             Shuffle(samples);
             //For each epoch:
+            var total = samples.Count;
             while (samples.Count != 0)
             {
+                Console.WriteLine("Percent Learning Sample: " + String.Format("{0:F5}", (total - samples.Count) / (1.0 * total)));
                 //Treat "batchsize" number of samples
                 for (int i = 0; i < batchsize; i++)
                 {
@@ -321,6 +351,7 @@ namespace TranscriptDetection.Nets
         {
             int success = 0;
             int total = 0;
+
             foreach (var image in ValidationImages)
             {
                 Vector doublevector = ConvertImageToVector(image);
@@ -333,7 +364,6 @@ namespace TranscriptDetection.Nets
                     success += 1;
                 }
                 total += 1;
-
                 if (total == 10000)
                 {
                     break;
